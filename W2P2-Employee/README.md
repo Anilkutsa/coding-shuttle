@@ -1,7 +1,5 @@
-# 🚀 Coding Shuttle: Week 2 - Build Set of API's for Engineering Department!
-The following was discovered as part of building this project:
-
-* The original package name 'com.codingshuttle.w2p2.department.w2p2-department' is invalid and this project uses 'com.codingshuttle.w2p2.department.w2p2_department' instead.
+# 🚀 Coding Shuttle: Week 2 - Build Set of API's for Employee Management System !!!
+Welcome to Week 2 of the Coding Shuttle course! In this week, we will cover the below mentioned topics.
 
 # 📚 Topics Covered in Week 2
 1. Spring boot web and MVC Architecure
