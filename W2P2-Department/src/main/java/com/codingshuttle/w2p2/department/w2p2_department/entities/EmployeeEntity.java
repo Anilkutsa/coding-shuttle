@@ -1,5 +1,6 @@
 package com.codingshuttle.w2p2.department.w2p2_department.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,5 +21,6 @@ public class EmployeeEntity {
     private String email;
     private Integer age;
     private LocalDate dateOfJoining;
+    @JsonProperty("isActive")
     private Boolean isActive;
 }

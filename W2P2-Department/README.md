@@ -185,3 +185,28 @@ But, how do we map Entity to return objects in DTO format. We will be using **`M
 To use ModelMapper as a bean, define ModelMapper as a bean in configs folder. 
 
 Checkout EmployeeService class for implementation details. 
+
+# Topic 5 - PUT, PATCH & DELETE Mappings
+
+In this section, we covered below REST operations: 
+- **`PUT`** - Update the entire object entry in DB
+- **`DELETE`** - Delete the entire object entry in DB
+- **`PATCH`** - Update part of object in DB. We use Java Reflections for handling PATCH operations.
+
+In cases where lombok is not able to decipher field name properly, its better that we use **`@JsonProperty`** annotation.
+
+We have also covered topic related usage of **`ResponseEntity`**. 
+
+It is appropriate that we wrap our response in ResponseEntity for control over the HTTP status code, headers, and body of the response. Some of the scenarios covered include -
+
+```java 
+// Return incase you want to return success
+ResponseEntity.ok(employeeService.getAllEmployees());
+
+// Return incase you want to return custom success/error response code
+new ResponseEntity<>(savedEmployee, HttpStatus.CREATED);
+
+// Return 400 not found error code
+ResponseEntity.notFound().build();
+```
+

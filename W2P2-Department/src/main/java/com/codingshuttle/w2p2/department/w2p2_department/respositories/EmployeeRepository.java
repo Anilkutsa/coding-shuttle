@@ -1,6 +1,5 @@
 package com.codingshuttle.w2p2.department.w2p2_department.respositories;
 
-
 import com.codingshuttle.w2p2.department.w2p2_department.entities.EmployeeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
