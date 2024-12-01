@@ -208,3 +208,35 @@ new ResponseEntity<>(savedEmployee, HttpStatus.CREATED);
 ResponseEntity.notFound().build();
 ```
 
+# Topic 6 - Input Validations Annotations, Creating Custom Annotations for Validations
+
+In this section, we have covered 
+- How to add field validations. Checkout **`EmployeeDTO`** class for implementation.
+- How to create Custom Validation Annotations. Checkout **`EmployeeRoleValidation`** for implementation. 
+
+# Topic 7 - Exception Handling in Spring Boot MVC
+
+Benefits of Exception Handling 
+- Prevent application crashes. 
+- Provide user-friendly error responses. 
+- Facilitate debugging and maintenance. 
+- Ensure consistent error handling across the application.
+
+Handling Exceptions 
+- Use **`@ExceptionHandler`** to handle specific exceptions in controllers. 
+- Use **`@RestControllerAdvice`** for global exception handling. 
+- Return appropriate HTTP status codes and error messages. 
+- Use Custom error response class to provide structured error details.
+
+Refer to **`GlobalExceptionHandler & ApiError`** classes for implementation details.
+
+# Topic 8 - Transforming API Response
+
+This topic helps add standard wrapper around all types of responses, be it success or failure. You can include necessary details like time, date etc., as part of this standard response wrapper.
+
+- Extend your class with **`@ResponseBodyAdvice<Object>`** to define the custom return type. 
+- Use **`@RestControllerAdvice`** for global API Response transformation. 
+- Return appropriate HTTP status codes and error messages. 
+- You can also return the timestamp of the API response.
+
+Refer to **`GlobalResponseHandler, ApiResponse & GlobalExceptionHandler`** classes for implementation details.
