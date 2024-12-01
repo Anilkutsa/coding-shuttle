@@ -170,4 +170,18 @@ Key Points of CrudRepository :
 
 All the basic DB operations supplied out of the box by JPARepository. Custom methods have to be defined and implemented separately. 
 
+# Topic 4 - The Service Layer
 
+- The service layer acts as a bridge between the persistence layer (responsible for data access) and the presentation layer (handling user interaction) 
+- It encapsulates the business logic of the application, orchestrates interactions between different components, and provides a clean interface for external clients to interact with the system. 
+- By abstracting away the complexities of data access and business operations, the service layer promotes modularity, maintainability, and scalability.
+
+So, our project should follow the below structure - 
+
+![image info](./assets/spring-project-structure.png)
+
+But, how do we map Entity to return objects in DTO format. We will be using **`ModelMapper`** library for that. 
+
+To use ModelMapper as a bean, define ModelMapper as a bean in configs folder. 
+
+Checkout EmployeeService class for implementation details. 
