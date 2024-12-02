@@ -33,6 +33,7 @@ class W3P1JpaTutorialApplicationTests {
 		System.out.println(savedProductEntity);
 	}
 
+	/** Examples of getting data based on QUERY parameters. Sort of SORTING data */
 	@Test
 	void getRepository() {
 //		List<ProductEntity> entities = productRepository.findAll();

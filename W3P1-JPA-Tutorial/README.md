@@ -101,4 +101,37 @@ You can either use JPQL or write your own custom queries as detailed in **`Produ
 
 Kindly refer to **`ProductRepository`** & **`W3P3JpaTutorialApplicationTests`** classes for implementation details.
 
+# Topic 4 - Sorting & Pagination
 
+**Sorting** - Sorting allows you to order the records based on the one or more fields. It is useful when you need to present the data in a specific order, such as sorting the products by price or name.
+
+### Sorting with method queries
+
+```java
+// OrderBy
+@Repository
+public interface EmployeeRepository extends JpaRepository<Employee, Long> { 
+    List<Employee> findAllByOrderByNameAsc(); List<Employee> findAllByOrderByNameDesc(); 
+}
+```
+### Sorting with the Sort class
+
+```java
+// Sort Parameter In Query Methods 
+@Repository 
+public interface EmployeeRepository extends JpaRepository<Employee, Long> { 
+    List<Employee> findByDepartment(String department, Sort sort); 
+} 
+
+// Using the Sort class
+Sort sort = Sort.by(Sort.Direction.ASC, sortField); 
+Sort sort = Sort.by(Sort.Order.asc("name"), Sort.Order.desc("salary"));
+```
+
+### Pagination 
+Pagination refers to the process of dividing a large dataset into smaller chunks or pages of the data. It allows the users to navigate through the subsets of the data rather than loading all data at once, which can be inefficient and slow.
+- **Page:** A single chunk of data that contains a subset of the total dataset. It is an interface representing a page of data, including information about the total number of pages, total number of elements, and the current page's data. 
+- **Pageable:** An interface that provides pagination information such as page number, page size, and sorting options. 
+- **PageRequest:** A concrete implementation of Pageable that provides methods to create pagination and sorting information.
+
+Kindly refer to **`ProductController`** & **`ProductRepository`** classes for implementation details.
