@@ -31,6 +31,4 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
     List<ProductEntity> findByOrderByPrice();
 
     List<ProductEntity> findBy(Sort sort);
-
-
 }

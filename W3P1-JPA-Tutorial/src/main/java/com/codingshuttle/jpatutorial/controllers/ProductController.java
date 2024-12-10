@@ -17,7 +17,6 @@ import java.util.List;
 @RequestMapping(path = "/products")
 public class ProductController {
 
-
     private final ProductRepository productRepository;
 
     public ProductController(ProductRepository productRepository) {

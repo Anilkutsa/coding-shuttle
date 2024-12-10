@@ -51,5 +51,4 @@ class W3P1JpaTutorialApplicationTests {
 				.findByTitleAndPrice("Pepsi", BigDecimal.valueOf(14.4));
 		productEntity.ifPresent(System.out::println);
 	}
-
 }
