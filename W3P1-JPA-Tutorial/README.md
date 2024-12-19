@@ -1,13 +1,11 @@
-# 🚀 Coding Shuttle: Week 3 - Hibernate & Spring Boot Data JPA
+# 🚀 Coding Shuttle: Week 3 (Part 1) - Hibernate & Spring Boot Data JPA
 Welcome to Week 3 of the Coding Shuttle course! In this week, we will cover the below-mentioned topics.
 
-# 📚 Topics Covered in Week 3
+# 📚 Topics Covered in Week 3 (Part 1)
 1. Installation MySQL & DBeaver
 2. Hibernate
 3. Spring Data JPA
 4. Creating Dynamic Query Methods
-5. Sorting and Pagination
-6. Data Mappings - 1:1, 1:N, N:M
 
 # Topic 1 - Installation MySQL & DBeaver
 
