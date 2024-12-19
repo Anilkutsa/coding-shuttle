@@ -12,11 +12,26 @@ import lombok.Setter;
 @NoArgsConstructor
 @Getter
 @Setter
-public class PostEntity {
+public class PostEntity extends AuditingBaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String title;
     private String description;
+
+    @PrePersist
+    void beforeSave() {
+
+    }
+
+    @PreUpdate
+    void beforeUpdate() {
+
+    }
+
+    @PreRemove
+    void beforeDelete() {
+
+    }
 }
