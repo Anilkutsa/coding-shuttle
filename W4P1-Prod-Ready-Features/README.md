@@ -61,3 +61,12 @@ Auditing in Spring Boot allows you to automatically populate certain fields, suc
 
 ## Steps Involved
 1. Install the dependency in POM file
+2. Add **`@Audited`** annotation in **`AuditingBaseEntity`** class. 
+3. Add the annotation to entity classes where you want to monitor the changes.
+4. Alternately, you can add **`@NotAudited`** annotation to fields which you don't want to monitor.
+
+That's it. Now hibernate-envers will create 2 additional tables posts_aud and revinfo for tracking all the changes to data.
+
+hibernate-envers provides us with AuditReaderFactory object which we can use reading audit files of a particular entity class.
+You can call {{URL}}/posts/{postId} (built using **`AuditController`**) to check audit logs.
+

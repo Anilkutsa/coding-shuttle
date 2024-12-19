@@ -2,7 +2,6 @@ package com.codingshuttle.w4p1.prod_ready_features.controllers;
 
 import com.codingshuttle.w4p1.prod_ready_features.dto.PostDTO;
 import com.codingshuttle.w4p1.prod_ready_features.services.PostService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,5 +29,10 @@ public class PostController {
     @PostMapping
     public PostDTO createNewPost(@RequestBody PostDTO inputPost) {
         return postService.createNewPost(inputPost);
+    }
+
+    @PutMapping("{postId}")
+    public PostDTO updatePost(@RequestBody PostDTO inputPost, @PathVariable Long postId) {
+        return postService.updatePost(inputPost, postId);
     }
 }
