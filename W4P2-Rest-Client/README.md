@@ -1,6 +1,10 @@
 # 🚀 Coding Shuttle: Week 4 (PART 2) - REST CLIENT, LOGGING (SLF4J)
 Welcome to Week 4 of the Coding Shuttle course! In this week, we will cover the below-mentioned topics.
 
+# 📚 Topics Covered in Week 4 (PART 2)
+* **Rest Client:** A feature in Spring Boot that allows making HTTP calls to external APIs, typically using libraries like RestTemplate or WebClient.
+* **Logging (SLF4J):** A simple facade for logging in Spring Boot, providing abstraction over various logging frameworks like Logback and Log4j.
+
 # RestClient
 
 The **RestClient** is a synchronous HTTP client that provides a modern, fluent API. It simplifies interaction with HTTP services by abstracting low-level HTTP details and offering convenient methods for converting Java objects to HTTP requests and vice versa.

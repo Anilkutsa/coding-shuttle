@@ -39,7 +39,7 @@ public class User {
 }
 ```
 JSON Response:
-```java
+```json
 {
 "id": 1,
 "username": "johndoe"
