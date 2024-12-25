@@ -320,3 +320,113 @@ JWT (JSON Web Token) is a widely used standard for secure, stateless communicati
 
 ## Conclusion
 JWT is ideal for scalable, stateless authentication and secure data exchange, provided proper security practices are followed.
+
+---
+
+# 5. SignUp and Login using JWT
+
+## 1. SignUp
+
+1. Create a controller and mapping for SignUp, AuthController in our case. 
+
+```java
+@PostMapping("/signup")
+public ResponseEntity<UserDto> signUp(@RequestBody SignUpDto signUpDto) {
+    UserDto userDto = userService.signUp(signUpDto);
+    return ResponseEntity.ok(userDto);
+}
+```
+
+2. Create necessary method in Service class, UserService in our case. Save the user in DB
+
+```java
+public UserDto signUp(SignUpDto signUpDto) {
+    User savedUser = userRepository.save(toBeCreatedUser);
+    return modelMapper.map(savedUser, UserDto.class);
+}
+```
+
+3. Return the saved user. We will just be saving the user in this step. JWT token gets created when user tries to login.
+
+## 2. Login (Step-by-Step Explanation)
+
+<img src="./assets/spring-security-detailed-flow.png" alt="Spring Security Flow" width="750">
+
+#### 1. Creation of the Authentication Token:
+* The **`UsernamePasswordAuthenticationToken`** is created using the email and password from the **`LoginDto`**.
+* This token essentially represents the user’s credentials, but at this point, they are not yet verified.
+
+#### 2. AuthenticationManager.authenticate():
+* The **`authenticationManager.authenticate()`** method is called with the token.
+* The **`AuthenticationManager`** is responsible for delegating the authentication process to the appropriate AuthenticationProvider.
+
+```java
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+    private final AuthenticationManager authenticationManager;
+    ...
+
+    public String login(LoginDto loginDto) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+        );
+        ...
+    }
+}
+```
+
+#### 3. Delegation to an AuthenticationProvider:
+* The **`AuthenticationManager`** checks its list of configured AuthenticationProviders to find one capable of handling the UsernamePasswordAuthenticationToken.
+* In a typical Spring Security setup, the **`DaoAuthenticationProvider`** is used for verifying credentials.
+
+#### 4. Verification by DaoAuthenticationProvider:
+* The **`DaoAuthenticationProvider`** retrieves the user details from the **`UserDetailsService`** (often implemented by UserService in your case).
+* The user’s email (or username) is looked up in the database via **`UserDetailsService.loadUserByUsername()`**.
+* If the user exists, the hashed password retrieved from the database is compared with the hashed version of the provided password using a **`PasswordEncoder`** (e.g., BCrypt).
+
+```java
+@Service
+@RequiredArgsConstructor
+public class UserService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByEmail(username)
+                .orElseThrow(() -> new BadCredentialsException("User with email " + username + " not found"));
+    }
+}
+```
+
+#### 5. Successful Authentication:
+* If the credentials are valid, an authenticated Authentication object is returned.
+* This object contains details about the authenticated user, including roles and permissions.
+
+#### 6. Fetching the User and Generating the Token:
+* The authenticated Authentication object is used to retrieve the User (via getPrincipal()).
+* Finally, the JWT is generated using the **`JwtService.generateAccessToken()`** method.
+
+```java
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+
+    public String login(LoginDto loginDto) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+        );
+
+        User user = (User) authentication.getPrincipal();
+        return jwtService.generateAccessToken(user);
+    }
+}
+```
+
+#### Why Does UsernamePasswordAuthenticationToken Work?
+* The UsernamePasswordAuthenticationToken acts as a wrapper for the user’s credentials. It doesn’t verify anything on its own but provides the necessary information for the AuthenticationProvider to perform verification.
+* This separation of concerns allows Spring Security to flexibly handle different authentication mechanisms while maintaining a clean and modular structure.
