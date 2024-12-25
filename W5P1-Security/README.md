@@ -427,6 +427,137 @@ public class AuthService {
 }
 ```
 
+## Login Workflow with JWT Token
+<img src="./assets/login_workflow_with_jwt.png" alt="Login Workflow with JWT" width="750">
+
 #### Why Does UsernamePasswordAuthenticationToken Work?
 * The UsernamePasswordAuthenticationToken acts as a wrapper for the user’s credentials. It doesn’t verify anything on its own but provides the necessary information for the AuthenticationProvider to perform verification.
 * This separation of concerns allows Spring Security to flexibly handle different authentication mechanisms while maintaining a clean and modular structure.
+
+# 6. JWT Authentication Workflow with Spring Security
+
+<img src="./assets/auth_workflow_with_JWT.png" alt="Login Workflow with JWT" width="750">
+
+## 1. Overview
+This implementation secures a Spring Boot application by using JWT for authentication. The security setup is stateless (no sessions) and uses a custom `JwtAuthFilter` to validate incoming JWT tokens.
+
+---
+
+## 2. Components and Their Roles
+
+### **2.1 JwtAuthFilter**
+- **Class**: `JwtAuthFilter`
+- **Extends**: `OncePerRequestFilter`
+- **Purpose**:
+    - Intercepts each HTTP request.
+    - Extracts the JWT token from the `Authorization` header.
+    - Validates the token and sets up the `SecurityContext` for the authenticated user.
+
+#### Key Methods:
+1. **doFilterInternal**:
+    - Checks if the request has an `Authorization` header with a JWT token.
+    - Extracts and validates the token using `JwtService`.
+    - Fetches user details (`UserService`) and sets up a `UsernamePasswordAuthenticationToken`.
+    - Sets the authentication token in `SecurityContextHolder`.
+
+#### Notes:
+- Use a `HandlerExceptionResolver` to handle any errors during filtering.
+
+```java
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+        throws ServletException, IOException {
+    try {
+        String token = resolveToken(request.getHeader("Authorization"));
+        if (token != null && jwtService.validateToken(token)) {
+            Long userId = jwtService.getUserIdFromToken(token);
+            User user = userService.getUserById(userId);
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+        filterChain.doFilter(request, response);
+    } catch (Exception ex) {
+        handlerExceptionResolver.resolveException(request, response, null, ex);
+    }
+}
+```
+
+---
+
+### **2.2 JwtService**
+- **Role**: Handles JWT creation and validation.
+- **Responsibilities**:
+    - Extract user ID or username from the token.
+    - Validate token expiration and signature.
+
+```java
+@Service
+public class JwtService {
+    public Long getUserIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return Long.valueOf(claims.getSubject());
+    }
+}
+```
+---
+
+### **2.3 UserService**
+- **Role**: Fetches user data from the database.
+- **Responsibilities**:
+    - Retrieve user details by ID or username.
+
+```java
+@Service
+@RequiredArgsConstructor
+public class UserService implements UserDetailsService {
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User with id " + userId +
+                " not found"));
+    }
+}
+```
+---
+
+### **2.4 WebSecurityConfig**
+- **Class**: `WebSecurityConfig`
+- **Purpose**:
+    - Configures Spring Security.
+    - Adds the `JwtAuthFilter` to the security filter chain.
+    - Defines which endpoints require authentication and which are publicly accessible.
+
+#### Key Configuration Details:
+1. **CSRF Disabled**:
+    - Since the application uses JWT, CSRF is not required.
+
+2. **Stateless Sessions**:
+    - Set `SessionCreationPolicy.STATELESS` for REST APIs to avoid using HTTP sessions.
+
+3. **Authorization Rules**:
+    - `GET /posts/**`: Publicly accessible.
+    - `POST /posts/**`: Requires authentication.
+    - `anyRequest()`: All other requests require authentication.
+
+4. **Adding JWT Filter**:
+    - The `JwtAuthFilter` is added before `UsernamePasswordAuthenticationFilter`.
+
+```java
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    httpSecurity
+        .csrf(csrf -> csrf.disable())
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(publicRoutes).permitAll()
+            .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/posts/**").authenticated()
+            .anyRequest().authenticated())
+        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+    return httpSecurity.build();
+}
+```
