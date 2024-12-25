@@ -8,3 +8,71 @@ Welcome to Week 6 (Part 1) of the Coding Shuttle course! This week, we dive into
 1. Refresh Token vs Access Token
 
 ---
+
+# 1. Refresh Token vs Access Token
+
+## Issues with JWT Access Tokens
+
+#### 1. Increased Risk with Long-Lived Tokens
+If an access token is used for an extended period, its exposure in requests increases the risk of it being intercepted or misused. Short-lived tokens reduce this risk by limiting how long a stolen token can be exploited. However, short-lived tokens alone are not a complete solution.
+
+#### 2. Frequent Reauthentication Disrupts User Experience
+Since access tokens are typically short-lived, users may need to reauthenticate frequently if a refresh token mechanism is not implemented. This can disrupt the user experience and reduce overall convenience.
+
+---
+
+### Solution: Two-Token Approach
+To address these challenges, a two-token approach is recommended:
+
+#### 1. Access Token
+- **Purpose**: Grants short-term access to protected resources.
+- **Characteristics**: Short-lived to minimize risk if intercepted. Typically stored in memory or as a client-side variable.
+
+#### 2. Refresh Token
+- **Purpose**: Used to obtain a new access token when the old one expires.
+- **Characteristics**: Long-lived and securely stored (e.g., in HTTP-only cookies). Only transmitted during the token renewal process, reducing its exposure.
+
+---
+
+By combining access tokens for frequent, secure resource access and refresh tokens for extended user sessions, this approach ensures both security and convenience in JWT-based authentication systems.
+
+<img src="./assets/two-token-approach.png" alt="Spring Security Flow" width="1000">
+
+# Access Token and Refresh Token Implementation in Spring Boot
+
+This document provides a step-by-step explanation of implementing access tokens and refresh tokens in a Spring Boot application to ensure secure and efficient authentication mechanisms.
+
+## Overview
+
+1. **Access Token**: A short-lived token used for accessing protected resources.
+2. **Refresh Token**: A long-lived token used to obtain a new access token when the old one expires.
+
+The application uses Spring Boot with JWT (JSON Web Token) for token-based authentication.
+
+---
+
+## Implementation Steps
+
+### 1. Implement `AuthController`
+
+The `AuthController` provides endpoints for user signup, login, and token refresh.
+
+#### Key Endpoints:
+
+- **`/auth/signup`**: Allows users to create an account.
+- **`/auth/login`**: Authenticates the user and provides access and refresh tokens.
+- **`/auth/refresh`**: Generates a new access token using the refresh token stored in cookies.
+
+### 2. Create necessary methods in `AuthService`
+
+The `AuthService` handles user login and token refresh logic. In our case, we have created two methods `login()` and `refreshToken` which help generate access/refresh token and return that in `LoginResponseDto` format.
+
+### 3. Implement the `JwtService`
+
+The `JwtService` generates and validates JWTs. In our case, we have added 2 new methods namely `generateAccessToken()` and `generateRefreshToken()` that help generate Jwt tokens with data and expiration dates.
+
+### 4. Test the Application
+
+Please test the application using `/auth/login` and  `/auth/refresh` API's. Reduce the expiry time of access and refresh token for the purpose of testing.
+
+---
