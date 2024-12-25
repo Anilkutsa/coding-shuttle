@@ -141,6 +141,7 @@ User session management refers to the practice of maintaining and controlling us
    - `(session_id, refreshToken, userId, lastUsedAt)`
 2. When renewing ACCESS-TOKEN using REFRESH-TOKEN
    - if REFRESH-TOKEN is not expired AND the session is present, return ACCESS-TOKEN
+   - if session is NOT present, return Exception
 3. Upon a New Login request, check if the session limit is full. 
    - if full -> remove the least recently used session 
    - else -> Follow step 1
