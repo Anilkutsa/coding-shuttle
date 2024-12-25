@@ -21,6 +21,11 @@ public class JwtService {
         return Keys.hmacShaKeyFor(jwtSecretKey.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * @param user
+     * @return
+     * Service method for generating new ACCESS token
+     */
     public String generateAccessToken(User user) {
         return Jwts.builder()
                 .subject(user.getId().toString())
@@ -32,6 +37,11 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+     * @param user
+     * @return
+     * Service method for generating new REFRESH token
+     */
     public String generateRefreshToken(User user) {
         return Jwts.builder()
                 .subject(user.getId().toString())
@@ -41,6 +51,11 @@ public class JwtService {
                 .compact();
     }
 
+    /**
+     * @param token
+     * @return
+     * Service method to get UserId from ACCESS token
+     */
     public Long getUserIdFromToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSecretKey())

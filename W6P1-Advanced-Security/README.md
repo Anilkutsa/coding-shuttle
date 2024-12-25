@@ -7,6 +7,7 @@ Welcome to Week 6 of the Coding Shuttle course! This week, we dive into ADVANCED
 # 📚 Topics Covered in Week 6
 1. Refresh Token vs Access Token
 2. Google OAuth2 Client Authentication in Spring Security
+3. User Session management using JWT
 
 ---
 
@@ -124,7 +125,80 @@ The `OAuth2SuccessHandler` handles successful authentication by:
 
 (
 Replace below details - 
-gcid: 451477101490-0mk13k8vhj3e1rbp4mrsuk6915cv86ui.apps.googleusercontent.com
-gcs: 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
+- gcid: 451477101490-0mk13k8vhj3e1rbp4mrsuk6915cv86ui.apps.googleusercontent.com
+- gcs: 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
 )
 ---
+
+# 3. User Session management using JWT
+
+User session management refers to the practice of maintaining and controlling user interactions with an application over a period of time. It involves tracking and managing user login sessions, ensuring security, and providing a seamless user experience.
+
+---
+
+## Overview
+JWT Session management:
+1. Generate Access-Token + Refresh-Token and store the Session using this schema `(session_id, refreshToken, userId, lastUsedAt)`
+2. Renew Access-Token using Refresh-Token, if Refresh-Token is not expired AND the session is present. 
+3. Upon a New Login request, check if the session limit is full. 
+   - if full -> remove the least recently used session 
+   - else -> Follow step 1
+
+---
+## Session Workflow
+
+<img src="./assets/session-workflow.png" alt="Spring Security Flow" width="1000">
+
+---
+
+## Components and Logic
+
+### 1. **SessionService**
+Handles session generation and validation logic.
+
+#### **Methods**:
+
+- **`generateNewSession(User user, String refreshToken)`**:
+    - Creates a new session for the user.
+    - If the user exceeds the session limit (default: 2), deletes the least recently used session.
+    - Saves the new session to the database.
+
+- **`validateSession(String refreshToken)`**:
+    - Checks if the provided refresh token exists in the database.
+    - Updates the `lastUsedAt` timestamp for the session if valid.
+    - Throws `SessionAuthenticationException` if the session is invalid.
+
+---
+
+### 2. **SessionRepository**
+A JPA repository for managing session entities in the database.
+
+---
+
+### 3. **Session Entity**
+Defines the `Session` object with attributes such as `refreshToken`, `lastUsedAt`, and a relationship with the `User` entity.
+
+---
+
+### 4. **AuthService**
+Handles authentication, session generation, and token-based authorization.
+
+#### **Methods**:
+
+- **`login(LoginDto loginDto)`**:
+    - Authenticates the user using `AuthenticationManager`.
+    - Generates access and refresh tokens.
+    - Creates a new session using `SessionService.generateNewSession()`.
+
+- **`refreshToken(String refreshToken)`**:
+    - Validates the refresh token using `SessionService.validateSession()`.
+    - Generates a new access token.
+    - Fails to create refreshToken if session data does not exist
+
+---
+
+## Summary
+This implementation ensures:
+- **Session Limitation**: Prevents users from exceeding a predefined number of active sessions.
+- **Session Validation**: Validates and updates session activity for secure refresh token usage.
+- **Scalability**: Easily extendable to support more advanced session management features.
