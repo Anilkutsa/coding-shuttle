@@ -122,4 +122,9 @@ The `OAuth2SuccessHandler` handles successful authentication by:
 - Generating JWT access and refresh tokens.
 - Redirecting to the frontend with the access token.
 
+(
+Replace below details - 
+gcid: 451477101490-0mk13k8vhj3e1rbp4mrsuk6915cv86ui.apps.googleusercontent.com
+gcs: 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
+)
 ---
