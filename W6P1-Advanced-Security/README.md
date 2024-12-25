@@ -136,10 +136,11 @@ User session management refers to the practice of maintaining and controlling us
 
 ---
 
-## Overview
-JWT Session management:
-1. Generate Access-Token + Refresh-Token and store the Session using this schema `(session_id, refreshToken, userId, lastUsedAt)`
-2. Renew Access-Token using Refresh-Token, if Refresh-Token is not expired AND the session is present. 
+## JWT Session management:
+1. Generate ACCESS-TOKEN + REFRESH-TOKEN and store the Session using this schema 
+   - `(session_id, refreshToken, userId, lastUsedAt)`
+2. When renewing ACCESS-TOKEN using REFRESH-TOKEN
+   - if REFRESH-TOKEN is not expired AND the session is present, return ACCESS-TOKEN
 3. Upon a New Login request, check if the session limit is full. 
    - if full -> remove the least recently used session 
    - else -> Follow step 1
