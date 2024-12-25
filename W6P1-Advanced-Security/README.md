@@ -8,6 +8,7 @@ Welcome to Week 6 of the Coding Shuttle course! This week, we dive into ADVANCED
 1. Refresh Token vs Access Token
 2. Google OAuth2 Client Authentication in Spring Security
 3. User Session management using JWT
+4. Role Based Authorization
 
 ---
 
@@ -204,3 +205,89 @@ This implementation ensures:
 - **Session Limitation**: Prevents users from exceeding a predefined number of active sessions.
 - **Session Validation**: Validates and updates session activity for secure refresh token usage.
 - **Scalability**: Easily extendable to support more advanced session management features.
+
+# 4. Role Based Authorization
+
+## Authentication vs Authorization 
+- **`Authentication`** is the process of verifying the identity of a user. It ensures that the user is who they claim to be. Authentication typically involves validating credentials, such as a username and password, and creating a security context for the user. 
+- **`Authorization`** is the process of determining whether an authenticated user has the necessary permissions to access a particular resource or perform an action. It controls what an authenticated user can or cannot do. 
+
+### Who are you– Authentication 
+### What can you do - Authorization
+
+## Components and Logic
+
+## Overview
+RBAC ensures that only authorized users with specific roles can access certain resources or perform particular actions. The implemented roles in this application are:
+
+- **USER**: Basic access.
+- **CREATOR**: Can create resources (e.g., posts).
+- **ADMIN**: Full access to manage resources and users.
+
+---
+
+## Components and Logic
+
+### 1. **User Entity**
+The `User` entity implements `UserDetails` from Spring Security to integrate with Spring's authentication framework.
+
+#### Code:
+```java
+@Entity
+public class User implements UserDetails {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    ...
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private Set<Role> roles;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                .collect(Collectors.toSet());
+    }
+    ...
+}
+```
+
+### 2. **Role Enum**
+Defines the available roles in the application.
+
+#### Code:
+```java
+public enum Role {
+    USER,
+    CREATOR,
+    ADMIN
+}
+```
+
+### 3. **WebSecurityConfig**
+Configures security settings to apply role-based access to endpoints.
+
+#### Code:
+```java
+@Configuration
+public class WebSecurityConfig {
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(publicRoutes).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/posts/**")
+                            .hasAnyRole(Role.ADMIN.name(), Role.CREATOR.name())
+                        .anyRequest().authenticated())
+                ...
+                );
+        return httpSecurity.build();
+    }
+}
+```
+---
