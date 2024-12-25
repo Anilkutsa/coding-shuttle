@@ -290,4 +290,11 @@ public class WebSecurityConfig {
     }
 }
 ```
+
+### Summary
+This implementation ensures:
+1. **Role-Based Authorization**: Protects endpoints based on user roles.
+2. **Granular Permissions**: Allows fine-grained access control (e.g., only `CREATOR` and `ADMIN` can create posts).
+3. **Scalable Design**: Easily extendable to add more roles and permissions as needed.
+
 ---
