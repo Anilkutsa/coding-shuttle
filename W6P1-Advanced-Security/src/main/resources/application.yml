@@ -1,0 +1,16 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 451477101490-0mk13k8vhj3e1rbp4mrsuk6915cv86ui.apps.googleusercontent.com
+            client-secret: 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
+            scope: email,profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+          github:
+            client-id: ofujasldkfjalsf
+            client-secret: aldsjflaksdjfkl
+          facebook:
+            client-id: asldfjlaksfjlkasjfd
+            client-secret: asldfjalskdfkjalk

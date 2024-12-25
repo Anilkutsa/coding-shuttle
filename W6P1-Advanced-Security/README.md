@@ -1,11 +1,12 @@
-# 🚀 Coding Shuttle: Week 6 (PART 1) - Advanced Spring Security
+# 🚀 Coding Shuttle: Week 6 - Advanced Spring Security
 
-Welcome to Week 6 (Part 1) of the Coding Shuttle course! This week, we dive into ADVANCED features of Spring Security. Below are the topics we will cover:
+Welcome to Week 6 of the Coding Shuttle course! This week, we dive into ADVANCED features of Spring Security. Below are the topics we will cover:
 
 ---
 
 # 📚 Topics Covered in Week 6
 1. Refresh Token vs Access Token
+2. Google OAuth2 Client Authentication in Spring Security
 
 ---
 
@@ -74,5 +75,51 @@ The `JwtService` generates and validates JWTs. In our case, we have added 2 new 
 ### 4. Test the Application
 
 Please test the application using `/auth/login` and  `/auth/refresh` API's. Reduce the expiry time of access and refresh token for the purpose of testing.
+
+---
+
+# 2. Google OAuth2 Client Authentication in Spring Security
+
+This section explains how Google OAuth2 authentication works using your code implementation as a reference.
+
+## Workflow of Google OAuth2 Authentication
+Google OAuth2 is an authentication mechanism that allows users to log in using their Google account. It involves the following steps:
+
+<img src="./assets/google-oauth-workflow.png" alt="Spring Security Flow" width="1000">
+
+## Key Components in Your Implementation
+
+### 1. **Security Configuration**
+
+The `WebSecurityConfig` class configures security settings and integrates OAuth2 login.
+
+```java
+
+public class WebSecurityConfig {
+
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
+                ...
+                .oauth2Login(oauth2Config -> oauth2Config
+                        .failureUrl("/login?error=true")
+                        .successHandler(oAuth2SuccessHandler)
+                );
+        return httpSecurity.build();
+    }
+}
+```
+- **OAuth2 Success Handler**: The `oAuth2SuccessHandler` processes successful authentication requests.
+- **JWT Authentication**: The `JwtAuthFilter` validates JWTs for secured routes.
+
+### 2. **OAuth2SuccessHandler**
+
+The `OAuth2SuccessHandler` handles successful authentication by:
+- Retrieving user details from Google.
+- Checking if the user exists in the local database; if not, creating a new user.
+- Generating JWT access and refresh tokens.
+- Redirecting to the frontend with the access token.
 
 ---

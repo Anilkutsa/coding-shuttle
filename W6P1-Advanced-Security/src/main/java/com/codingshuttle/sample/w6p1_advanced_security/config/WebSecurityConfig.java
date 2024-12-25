@@ -1,6 +1,7 @@
 package com.codingshuttle.sample.w6p1_advanced_security.config;
 
 import com.codingshuttle.sample.w6p1_advanced_security.filters.JwtAuthFilter;
+import com.codingshuttle.sample.w6p1_advanced_security.handlers.OAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class WebSecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     private static final String[] publicRoutes = {
             "/error", "/auth/**", "/home.html"
@@ -26,16 +28,31 @@ public class WebSecurityConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+//        httpSecurity
+//                .csrf(csrf -> csrf.disable()) // Disable CSRF as it's unnecessary for token-based auth
+//                .sessionManagement(session -> session
+//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Use stateless sessions
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers(publicRoutes).permitAll()
+//                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll() // Allow unauthenticated GET
+//                        .requestMatchers(HttpMethod.POST, "/posts/**").authenticated() // Require authentication for POST
+//                        .anyRequest().authenticated()) // Default: any other request must be authenticated
+//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Enable HTTP Basic Authentication // Manage sessions
+
         httpSecurity
-                .csrf(csrf -> csrf.disable()) // Disable CSRF as it's unnecessary for token-based auth
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Use stateless sessions
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(publicRoutes).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll() // Allow unauthenticated GET
-                        .requestMatchers(HttpMethod.POST, "/posts/**").authenticated() // Require authentication for POST
-                        .anyRequest().authenticated()) // Default: any other request must be authenticated
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Enable HTTP Basic Authentication // Manage sessions
+                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/posts/**").authenticated()
+                        .anyRequest().authenticated())
+                .csrf(csrfConfig -> csrfConfig.disable())
+                .sessionManagement(sessionConfig -> sessionConfig
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oauth2Config -> oauth2Config
+                        .failureUrl("/login?error=true")
+                        .successHandler(oAuth2SuccessHandler)
+                );
 
         return httpSecurity.build();
     }
