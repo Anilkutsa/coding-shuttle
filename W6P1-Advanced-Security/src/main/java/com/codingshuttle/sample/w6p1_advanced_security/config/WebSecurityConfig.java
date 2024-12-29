@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -20,6 +21,7 @@ import static com.codingshuttle.sample.w6p1_advanced_security.entities.enums.Rol
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity(securedEnabled = true)
 public class WebSecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
@@ -42,12 +44,26 @@ public class WebSecurityConfig {
 //                        .anyRequest().authenticated()) // Default: any other request must be authenticated
 //                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Enable HTTP Basic Authentication // Manage sessions
 
-        httpSecurity
+//        httpSecurity
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers(publicRoutes).permitAll()
+//                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+//                        .requestMatchers(HttpMethod.POST, "/posts/**")
+//                            .hasAnyRole(ADMIN.name(), CREATOR.name())
+//                        .anyRequest().authenticated())
+//                .csrf(csrfConfig -> csrfConfig.disable())
+//                .sessionManagement(sessionConfig -> sessionConfig
+//                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+//                .oauth2Login(oauth2Config -> oauth2Config
+//                        .failureUrl("/login?error=true")
+//                        .successHandler(oAuth2SuccessHandler)
+//                );
+
+                httpSecurity
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(publicRoutes).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/posts/**")
-                            .hasAnyRole(ADMIN.name(), CREATOR.name())
+                        .requestMatchers("/posts/**").authenticated()
                         .anyRequest().authenticated())
                 .csrf(csrfConfig -> csrfConfig.disable())
                 .sessionManagement(sessionConfig -> sessionConfig

@@ -9,6 +9,8 @@ Welcome to Week 6 of the Coding Shuttle course! This week, we dive into ADVANCED
 2. Google OAuth2 Client Authentication in Spring Security
 3. User Session management using JWT
 4. Role Based Authorization
+5. Granular Authorization with Authority 
+6. Security Method Annotations - @Secured and @PreAuthorize
 
 ---
 
@@ -298,3 +300,345 @@ This implementation ensures:
 3. **Scalable Design**: Easily extendable to add more roles and permissions as needed.
 
 ---
+
+# 5. Granular Authorization with Authority 
+
+## Role vs Authority
+
+- Roles represent high-level, permissions that are typically associated with a group of users. For example, `USER`, `ADMIN`, `MANAGER` etc.
+- Authorities, also known as privileges or permissions, represent finegrained access rights within an application. For example, different authorities can be defined to allow users to `CREATE`, `UPDATE` AND `DELETE` a particular resource. `POST_CREATE`, `POST_UPDATE`, `POST_DELETE`, `BLOG_CREATE`, `BLOG_UPDATE`, `BLOG_DELETE`.
+
+---
+
+## Role Implementation 
+
+We have defined all our roles in `/entities/enums/Role.java` class.
+
+#### Role (Entities/Enum)
+
+```java
+public enum Role {
+    USER,
+    CREATOR,
+    ADMIN
+}
+```
+
+#### User (Entity)
+- We assign roles to a user during the time of his entity creation.
+- User entity class implements UserDetails interface which overrides `getAuthorities()` method. We return the list of all the roles that a user has through `SimpleGrantedAuthority` object through `getAuthorities()` method. 
+
+```java
+public class User implements UserDetails {
+    ...
+    
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private Set<Role> roles;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_"+role.name()))
+                .collect(Collectors.toSet());
+    }
+    ...
+}
+```
+
+#### WebSecurityConfig
+
+- Define paths user can access based on the his role inside config class
+
+```java
+public class WebSecurityConfig {
+    ...
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(publicRoutes).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/posts/**")
+                            .hasAnyRole(ADMIN.name(), CREATOR.name())
+                        .anyRequest().authenticated())
+                ...
+                );
+        return httpSecurity.build();
+    }
+```
+---
+
+## Permission Implementation (Naive)
+
+#### Permission (Entities/Enum)
+
+```java
+public enum Permission {
+
+    POST_VIEW,
+    POST_CREATE,
+    POST_UPDATE,
+    POST_DELETE,
+
+    USER_VIEW,
+    USER_CREATE,
+    USER_UPDATE,
+    USER_DELETE
+
+}
+```
+
+#### SignUpDto (dto)
+Start accepting list of permissions for a user in the API
+```java
+@Data
+public class SignUpDto {
+    private String email;
+    private String password;
+    private String name;
+    private Set<Role> roles;
+    private Set<Permission> permissions;
+}
+```
+
+#### User (Entity)
+- Now you can pass permissions that a user has along with a role
+
+```java
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
+public class User implements UserDetails {
+    ...
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private Set<Role> roles;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    private Set<Permission> permissions;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<SimpleGrantedAuthority> authorities = roles.stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+                .collect(Collectors.toSet());
+
+        permissions.stream().forEach(
+                permission -> authorities.add(new SimpleGrantedAuthority((permission.name()))));
+        
+        return authorities;
+    }
+    ...
+}
+```
+
+#### WebSecurityConfig
+
+- Define actions user can perform based on his authorities (permissions) inside config class
+
+```java
+import com.codingshuttle.sample.w6p1_advanced_security.entities.enums.Permission;
+
+public class WebSecurityConfig {
+    ...
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        httpSecurity
+                .authorizeHttpRequests(auth -> auth
+                        ...
+                        .requestMatchers(HttpMethod.POST, "/posts/**")
+                            .hasAnyRole(ADMIN.name(), CREATOR.name())
+                        .requestMatchers(HttpMethod.POST, "/posts/**")
+                            .hasAnyAuthority(Permission.POST_DELETE.name(), Permission.POST_UPDATE.name())
+                        .requestMatchers(HttpMethod.DELETE, "/posts/**")
+                            .hasAuthority(Permission.POST_DELETE.name())
+                        .anyRequest().authenticated())
+                ...
+                );
+        return httpSecurity.build();
+    }
+```
+
+---
+
+## Permission Optimisation - 1
+
+#### PermissionMapping (Utils)
+- Set a mapping between user role and permission in utils package and return SET of permissions given a role
+
+```java
+public class PermissionMapping {
+
+    private static final Map<Role, Set<Permission>> map = Map.of(
+            USER, Set.of(USER_VIEW, POST_VIEW),
+            CREATOR, Set.of(POST_CREATE, USER_UPDATE, POST_UPDATE),
+            ADMIN, Set.of(POST_CREATE, USER_UPDATE, POST_UPDATE, USER_DELETE, USER_CREATE, POST_DELETE)
+    );
+
+    public static Set<SimpleGrantedAuthority> getAuthoritiesForRole(Role role) {
+        return map.get(role).stream()
+                .map(permission -> new SimpleGrantedAuthority(permission.name()))
+                .collect(Collectors.toSet());
+    }
+
+}
+```
+
+#### User (Entity)
+
+- Given a user role, use PermissionMapping to get permissions for the role and return the list
+
+```java
+public class User implements UserDetails {
+    ....
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+        roles.forEach(
+                role -> {
+                    Set<SimpleGrantedAuthority> permissions = PermissionMapping.getAuthoritiesForRole(role);
+                    authorities.addAll(permissions);
+                    authorities.add(new SimpleGrantedAuthority("ROLE_"+role.name()));
+                }
+        );
+        return authorities;
+    }
+```
+
+### Drawbacks of this approach
+
+- Permissions are tightly coupled with Roles
+- Not optimal when you application starts growing beyond a certain point
+
+---
+
+# 6. Security Method Annotations - @Secured and @PreAuthorize
+
+In a Spring Boot application, security method annotations such as @Secured and @PreAuthorize are used to enforce security constraints at the method level. These annotations define the roles or permissions required to access specific methods, providing fine-grained security controls for your application.
+
+## **@Secured Annotation**
+   - **Purpose:** Specifies security roles (authorities) required to invoke a method.
+   - **Configuration:** It is a part of Spring Security and needs to be enabled by adding @EnableGlobalMethodSecurity(securedEnabled = true) in your configuration class.
+   - **Usage:**
+     - You annotate methods and specify one or more roles required to access them.
+     - If the current user does not have the specified role(s), an AccessDeniedException is thrown.
+
+```java
+@Secured("ROLE_ADMIN")
+public void adminOnlyMethod() {
+    // Method accessible only by users with "ROLE_ADMIN"
+}
+
+@Secured({"ROLE_USER", "ROLE_MANAGER"})
+public void userOrManagerMethod() {
+    // Method accessible by users with "ROLE_USER" or "ROLE_MANAGER"
+}
+```
+
+## Code implementation 
+
+- Let's suppose we want user with `USER/ADMIN` role to view all posts. You can do that by declaring below annotation. 
+- Please mind to add `@EnableMethodSecurity(securedEnabled = true)` in config class before using this.
+
+
+```java
+    @GetMapping
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
+    public List<PostDTO> getAllPosts() {
+        return postService.getAllPosts();
+    }
+```
+
+Also, since we are delighting the control at method level, we don't need to define rules inside `WebSecurityConfig`.
+
+```java
+public class WebSecurityConfig {
+    ...
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+                httpSecurity
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(publicRoutes).permitAll()
+                        .requestMatchers("/posts/**").authenticated()
+                        .anyRequest().authenticated())
+                .csrf(csrfConfig -> csrfConfig.disable())
+                ...
+                );
+
+        return httpSecurity.build();
+    }
+```
+
+### Limitations:
+- Only works with roles (not fine-grained expressions).
+- not handle complex security logic or conditions.
+
+---
+
+## @PreAuthorize Annotation
+   - **Purpose:** Allows more complex security expressions using Spring Expression Language (SpEL).
+   - **Configuration:** Requires enabling with @EnableGlobalMethodSecurity(prePostEnabled = true) in the configuration class.
+   - **Usage:**
+     - Annotate methods with SpEL expressions to define security constraints.
+     - Provides greater flexibility than @Secured.
+
+```java
+@PreAuthorize("hasRole('ROLE_ADMIN')")
+public void adminOnlyMethod() {
+    // Method accessible only by users with "ROLE_ADMIN"
+}
+
+@PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MANAGER')")
+public void userOrManagerMethod() {
+    // Method accessible by users with either "ROLE_USER" or "ROLE_MANAGER"
+}
+
+@PreAuthorize("hasAuthority('VIEW_REPORTS') and #id == authentication.principal.id")
+public void viewReport(Long id) {
+    // Method accessible if the user has "VIEW_REPORTS" authority and their ID matches the given ID
+}
+```
+
+## Code implementation
+
+1. Define security rule for Posts like shown below in `utils/PostSecurity.java` class.
+
+```java
+@Component
+@RequiredArgsConstructor
+public class PostSecurity {
+
+    private  final PostService postService;
+
+    public boolean isOwnerOfPost(Long postId) {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        PostDTO post = postService.getPostById(postId);
+        return post.getAuthor().getId().equals(user.getId());
+    }
+}
+```
+
+2. Add `author` field for Post in DTO and Entity classes.
+3. Add necessary condition in PostController class.
+
+```java
+public class PostController {
+    ...
+    @GetMapping("/{postId}")
+    @PreAuthorize("@postSecurity.isOwnerOfPost(#postId)")
+    public PostDTO getPostById(@PathVariable Long postId) {
+        return postService.getPostById(postId);
+    }
+    ...
+}
+```
+
+Now, only posts created by Author will be shown when we request posts by id.
+
+### Advantages:
+- Can use authorities and roles interchangeably.
+- Allows logical operators (and, or, not).
+- Supports dynamic expressions, e.g., checking user attributes or method arguments.
